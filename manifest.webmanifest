@@ -1,0 +1,19 @@
+{
+  "name": "To‑Do Calendar",
+  "short_name": "To‑Do",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#0b1220",
+  "description": "깔끔한 To‑Do + 달력 (오프라인/설치 지원)",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
+

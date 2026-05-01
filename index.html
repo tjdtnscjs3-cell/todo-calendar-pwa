@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>To‑Do</title>
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+
+    <!-- Tailwind config MUST come before the CDN script -->
+    <script>
+      tailwind = {
+        theme: {
+          extend: {
+            boxShadow: {
+              soft: "0 24px 70px rgba(0,0,0,.28), 0 2px 10px rgba(0,0,0,.14)",
+            },
+            fontFamily: {
+              sans: [
+                "ui-sans-serif",
+                "system-ui",
+                "-apple-system",
+                "Segoe UI",
+                "Roboto",
+                "Helvetica Neue",
+                "Arial",
+                "Noto Sans",
+                "Apple Color Emoji",
+                "Segoe UI Emoji",
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+      /* Fallback styling so the page is NOT blank even if Tailwind fails to load */
+      :root {
+        color-scheme: dark;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        background:
+          radial-gradient(1100px 600px at 15% 5%, rgba(99, 102, 241, 0.22), transparent 55%),
+          radial-gradient(900px 520px at 92% 20%, rgba(16, 185, 129, 0.18), transparent 55%),
+          radial-gradient(1000px 560px at 40% 105%, rgba(236, 72, 153, 0.16), transparent 55%),
+          linear-gradient(180deg, rgba(15, 23, 42, 1) 0%, rgba(2, 6, 23, 1) 100%);
+        color: rgba(255, 255, 255, 0.92);
+      }
+      .no-tailwind-note {
+        display: none;
+      }
+      /* If Tailwind doesn't load, most classes won't style, so show a helpful note */
+      .tw-check:not([data-tw="ok"]) .no-tailwind-note {
+        display: block;
+      }
+      /* basic button/input fallback */
+      input,
+      button {
+        font: inherit;
+      }
+    </style>
+  </head>
+
+  <body class="antialiased selection:bg-white/20 selection:text-white">
+    <div class="tw-check min-h-dvh" data-tw="ok">
+      <div class="mx-auto flex min-h-dvh max-w-3xl flex-col px-4 pb-10 pt-10 sm:px-6 sm:pt-14">
+        <header class="flex items-start justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 backdrop-blur">
+              <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+              <span>할 일 목록</span>
+            </div>
+            <h1 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">To‑Do</h1>
+            <p class="mt-1 text-sm text-white/70">추가 · 체크 · 삭제</p>
+
+            <div class="no-tailwind-note mt-4 rounded-2xl border border-white/15 bg-white/5 p-3 text-sm text-white/80">
+              Tailwind CDN이 차단되어 스타일이 적용되지 않았을 수 있어요. 그래도 기능은 동작합니다.
+            </div>
+          </div>
+
+          <div class="hidden shrink-0 sm:flex">
+            <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-right backdrop-blur">
+              <div class="text-xs text-white/60">완료</div>
+              <div class="mt-1 text-2xl font-semibold tabular-nums" id="completedCount">0</div>
+            </div>
+          </div>
+        </header>
+
+        <main class="mt-8">
+          <section class="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-soft backdrop-blur sm:p-5">
+            <div class="flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <div class="text-xs text-white/60">선택한 날짜</div>
+                <div class="mt-1 truncate text-base font-semibold tabular-nums" id="selectedDateLabel">—</div>
+              </div>
+              <div class="flex shrink-0 items-center gap-2">
+                <button
+                  id="calPrevBtn"
+                  type="button"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/80 transition hover:bg-white/10 active:scale-[0.99]"
+                  aria-label="이전 달"
+                  title="이전 달"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </button>
+                <div class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold tabular-nums text-white/90" id="calendarMonthLabel">
+                  —
+                </div>
+                <button
+                  id="calNextBtn"
+                  type="button"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/80 transition hover:bg-white/10 active:scale-[0.99]"
+                  aria-label="다음 달"
+                  title="다음 달"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                    <path d="M9 6l6 6-6 6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-4 grid grid-cols-7 gap-2 text-center text-[11px] text-white/50">
+              <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+            </div>
+            <div id="calendarGrid" class="mt-2 grid grid-cols-7 gap-2"></div>
+
+            <div class="mt-3 flex items-center justify-between gap-3 text-xs text-white/60">
+              <button
+                id="goTodayBtn"
+                type="button"
+                class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-white/70 backdrop-blur transition hover:bg-white/10 hover:text-white"
+              >
+                오늘로 이동
+              </button>
+              <div class="text-white/45">날짜를 누르면 해당 날짜의 목록이 표시됩니다</div>
+            </div>
+          </section>
+
+          <section class="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-soft backdrop-blur sm:p-5">
+            <form id="todoForm" class="flex items-center gap-3" autocomplete="off">
+              <div class="flex-1">
+                <label for="todoInput" class="sr-only">할 일 추가</label>
+                <input
+                  id="todoInput"
+                  name="todo"
+                  type="text"
+                  placeholder="할 일을 입력하세요…"
+                  class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/45 outline-none transition focus:border-white/20 focus:bg-white/10 focus:ring-2 focus:ring-indigo-400/30"
+                  maxlength="140"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                class="inline-flex shrink-0 items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-white/90 active:scale-[0.99]"
+              >
+                추가
+              </button>
+            </form>
+
+            <div class="mt-4 flex items-center justify-between gap-3 text-xs text-white/60">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5">
+                  <span class="h-1.5 w-1.5 rounded-full bg-indigo-400/90"></span>
+                  <span id="totalCount">0</span>
+                  <span>개</span>
+                </span>
+                <span class="text-white/30">·</span>
+                <span class="inline-flex items-center gap-1.5">
+                  <span class="h-1.5 w-1.5 rounded-full bg-emerald-400/90"></span>
+                  <span class="sm:hidden">
+                    <span id="completedCountMobile">0</span>
+                    <span>완료</span>
+                  </span>
+                  <span class="hidden sm:inline">왼쪽 버튼을 누르면 체크됩니다</span>
+                </span>
+              </div>
+
+              <button
+                id="clearCompletedBtn"
+                type="button"
+                class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-white/70 backdrop-blur transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                disabled
+              >
+                완료 삭제
+              </button>
+            </div>
+          </section>
+
+          <section class="mt-5">
+            <ul id="todoList" class="space-y-2" aria-label="할 일 목록"></ul>
+
+            <div id="emptyState" class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6 text-center shadow-soft backdrop-blur">
+              <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-white/80" aria-hidden="true">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+              </div>
+              <h2 class="mt-4 text-base font-semibold">비어있어요</h2>
+              <p class="mt-1 text-sm text-white/65">위에서 첫 번째 할 일을 추가해보세요.</p>
+            </div>
+          </section>
+        </main>
+
+        <footer class="mt-auto pt-10 text-center text-xs text-white/45">
+          이 기기에서 자동 저장됩니다 (localStorage)
+        </footer>
+      </div>
+    </div>
+
+    <template id="todoItemTemplate">
+      <li class="group rounded-3xl border border-white/10 bg-white/5 p-3 shadow-soft backdrop-blur transition hover:bg-white/10 sm:p-4">
+        <div class="flex items-start gap-3">
+          <button
+            type="button"
+            data-action="toggle"
+            class="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/85 transition hover:bg-white/10 active:scale-[0.99]"
+            aria-label="완료 토글"
+            title="완료 토글"
+          >
+            <span class="relative block h-4 w-4 rounded-full border border-white/35">
+              <span data-role="check" class="absolute inset-0 grid place-items-center opacity-0 transition-opacity">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5" aria-hidden="true">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+              </span>
+            </span>
+          </button>
+
+          <div class="min-w-0 flex-1">
+            <p data-role="text" class="break-words text-sm leading-6 text-white/92"></p>
+            <p data-role="meta" class="mt-0.5 text-xs text-white/45"></p>
+          </div>
+
+          <button
+            type="button"
+            data-action="delete"
+            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/70 opacity-100 transition hover:bg-white/10 hover:text-white sm:opacity-0 sm:group-hover:opacity-100"
+            aria-label="삭제"
+            title="삭제"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+              <path d="M3 6h18" />
+              <path d="M8 6V4h8v2" />
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+              <path d="M10 11v6" />
+              <path d="M14 11v6" />
+            </svg>
+          </button>
+        </div>
+      </li>
+    </template>
+
+    <script>
+      (() => {
+        const STORAGE_KEY = "todo_singlefile_v2";
+
+        const root = document.querySelector(".tw-check");
+        const form = document.getElementById("todoForm");
+        const input = document.getElementById("todoInput");
+        const list = document.getElementById("todoList");
+        const emptyState = document.getElementById("emptyState");
+        const tpl = document.getElementById("todoItemTemplate");
+        const totalCountEl = document.getElementById("totalCount");
+        const completedCountEl = document.getElementById("completedCount");
+        const completedCountMobileEl = document.getElementById("completedCountMobile");
+        const clearCompletedBtn = document.getElementById("clearCompletedBtn");
+        const selectedDateLabel = document.getElementById("selectedDateLabel");
+        const calendarMonthLabel = document.getElementById("calendarMonthLabel");
+        const calendarGrid = document.getElementById("calendarGrid");
+        const calPrevBtn = document.getElementById("calPrevBtn");
+        const calNextBtn = document.getElementById("calNextBtn");
+        const goTodayBtn = document.getElementById("goTodayBtn");
+
+        // If Tailwind didn't load, keep data-tw unset so the note shows.
+        // Tailwind injects styles but doesn't give a reliable global flag, so we do a tiny runtime check:
+        // - If computed style for a Tailwind utility changes, we consider it loaded.
+        try {
+          const probe = document.createElement("div");
+          probe.className = "hidden";
+          document.body.appendChild(probe);
+          const display = getComputedStyle(probe).display;
+          probe.remove();
+          if (display === "none") root.dataset.tw = "ok";
+          else root.removeAttribute("data-tw");
+        } catch {
+          root.removeAttribute("data-tw");
+        }
+
+        /** @type {{id:string, text:string, completed:boolean, createdAt:number}[]} */
+        let todos = loadTodos();
+        const today = new Date();
+        let selectedDateKey = dateKeyFromDate(today);
+        let viewYear = today.getFullYear();
+        let viewMonth = today.getMonth(); // 0-11
+
+        function uid() {
+          if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+          return "t_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+        }
+
+        function dateKeyFromDate(d) {
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const dd = String(d.getDate()).padStart(2, "0");
+          return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function dateKeyToLabel(key) {
+          const [y, m, d] = String(key).split("-").map((x) => Number(x));
+          if (!y || !m || !d) return String(key);
+          return `${y}년 ${m}월 ${d}일`;
+        }
+
+        function formatTime(ts) {
+          const d = new Date(ts);
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const dd = String(d.getDate()).padStart(2, "0");
+          const hh = String(d.getHours()).padStart(2, "0");
+          const mi = String(d.getMinutes()).padStart(2, "0");
+          return `${yyyy}-${mm}-${dd} · ${hh}:${mi}`;
+        }
+
+        function loadTodos() {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return [];
+            const parsed = JSON.parse(raw);
+            if (!Array.isArray(parsed)) return [];
+            return parsed
+              .map((t) => ({
+                id: String(t?.id || uid()),
+                text: String(t?.text || "").trim(),
+                completed: Boolean(t?.completed),
+                createdAt: Number(t?.createdAt || Date.now()),
+                dateKey: String(t?.dateKey || ""),
+              }))
+              .map((t) => {
+                const dk = t.dateKey && /^\d{4}-\d{2}-\d{2}$/.test(t.dateKey) ? t.dateKey : dateKeyFromDate(new Date(t.createdAt));
+                return { ...t, dateKey: dk };
+              })
+              .filter((t) => t.text.length > 0);
+          } catch {
+            return [];
+          }
+        }
+
+        function saveTodos() {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+        }
+
+        function setCounts() {
+          const visible = todos.filter((t) => t.dateKey === selectedDateKey);
+          const total = visible.length;
+          const completed = visible.reduce((acc, t) => acc + (t.completed ? 1 : 0), 0);
+          totalCountEl.textContent = String(total);
+          completedCountEl.textContent = String(completed);
+          completedCountMobileEl.textContent = String(completed);
+          clearCompletedBtn.disabled = completed === 0;
+          emptyState.classList.toggle("hidden", total !== 0);
+          selectedDateLabel.textContent = dateKeyToLabel(selectedDateKey);
+        }
+
+        function render() {
+          list.innerHTML = "";
+          const frag = document.createDocumentFragment();
+
+          const visible = todos.filter((t) => t.dateKey === selectedDateKey);
+          for (const todo of visible) {
+            const node = tpl.content.firstElementChild.cloneNode(true);
+            node.dataset.id = todo.id;
+
+            const textEl = node.querySelector('[data-role="text"]');
+            const metaEl = node.querySelector('[data-role="meta"]');
+            const checkEl = node.querySelector('[data-role="check"]');
+            const circle = checkEl.parentElement;
+
+            textEl.textContent = todo.text;
+            metaEl.textContent = `${dateKeyToLabel(todo.dateKey)} · ${formatTime(todo.createdAt).split(" · ").pop()}`;
+
+            if (todo.completed) {
+              node.classList.add("ring-1", "ring-emerald-400/20");
+              textEl.classList.add("line-through", "text-white/55");
+              checkEl.classList.add("opacity-100");
+              circle.classList.add("border-emerald-400/40", "bg-emerald-400/10");
+            }
+
+            frag.appendChild(node);
+          }
+
+          list.appendChild(frag);
+          setCounts();
+          renderCalendar();
+        }
+
+        function addTodo(text) {
+          const cleaned = String(text || "").trim();
+          if (!cleaned) return;
+          todos.unshift({
+            id: uid(),
+            text: cleaned,
+            completed: false,
+            createdAt: Date.now(),
+            dateKey: selectedDateKey,
+          });
+          saveTodos();
+          render();
+        }
+
+        function toggleTodo(id) {
+          const t = todos.find((x) => x.id === id);
+          if (!t) return;
+          t.completed = !t.completed;
+          saveTodos();
+          render();
+        }
+
+        function deleteTodo(id) {
+          todos = todos.filter((t) => t.id !== id);
+          saveTodos();
+          render();
+        }
+
+        function clearCompleted() {
+          todos = todos.filter((t) => t.dateKey !== selectedDateKey || !t.completed);
+          saveTodos();
+          render();
+        }
+
+        function monthLabel(y, m) {
+          return `${y}년 ${m + 1}월`;
+        }
+
+        function moveMonth(delta) {
+          const d = new Date(viewYear, viewMonth + delta, 1);
+          viewYear = d.getFullYear();
+          viewMonth = d.getMonth();
+          renderCalendar();
+        }
+
+        function renderCalendar() {
+          calendarMonthLabel.textContent = monthLabel(viewYear, viewMonth);
+          calendarGrid.innerHTML = "";
+
+          const first = new Date(viewYear, viewMonth, 1);
+          const startDow = first.getDay(); // 0 Sun
+          const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+          const todayKey = dateKeyFromDate(new Date());
+
+          const frag = document.createDocumentFragment();
+          for (let i = 0; i < startDow; i++) {
+            const blank = document.createElement("div");
+            blank.className = "h-10";
+            frag.appendChild(blank);
+          }
+
+          for (let day = 1; day <= daysInMonth; day++) {
+            const key = dateKeyFromDate(new Date(viewYear, viewMonth, day));
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.dataset.date = key;
+            btn.className =
+              "h-10 rounded-2xl border border-white/10 bg-white/5 text-sm tabular-nums text-white/85 transition hover:bg-white/10 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-indigo-400/30";
+            btn.textContent = String(day);
+
+            const isSelected = key === selectedDateKey;
+            const isToday = key === todayKey;
+            const hasTodos = todos.some((t) => t.dateKey === key);
+
+            if (hasTodos) {
+              btn.classList.add("relative");
+              btn.style.position = "relative";
+              const dot = document.createElement("span");
+              dot.className = "absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-indigo-400/90";
+              btn.appendChild(dot);
+            }
+            if (isToday) btn.classList.add("border-emerald-400/40", "bg-emerald-400/10");
+            if (isSelected) btn.classList.add("ring-2", "ring-indigo-400/40", "bg-white/10");
+
+            frag.appendChild(btn);
+          }
+
+          calendarGrid.appendChild(frag);
+        }
+
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          addTodo(input.value);
+          input.value = "";
+          input.focus();
+        });
+
+        list.addEventListener("click", (e) => {
+          const btn = e.target.closest("button[data-action]");
+          if (!btn) return;
+          const item = btn.closest("li[data-id]");
+          if (!item) return;
+          const id = item.dataset.id;
+          if (btn.dataset.action === "toggle") toggleTodo(id);
+          if (btn.dataset.action === "delete") deleteTodo(id);
+        });
+
+        calendarGrid.addEventListener("click", (e) => {
+          const btn = e.target.closest("button[data-date]");
+          if (!btn) return;
+          selectedDateKey = btn.dataset.date;
+          const d = new Date(Number(selectedDateKey.slice(0, 4)), Number(selectedDateKey.slice(5, 7)) - 1, 1);
+          viewYear = d.getFullYear();
+          viewMonth = d.getMonth();
+          render();
+        });
+
+        calPrevBtn.addEventListener("click", () => moveMonth(-1));
+        calNextBtn.addEventListener("click", () => moveMonth(1));
+        goTodayBtn.addEventListener("click", () => {
+          const t = new Date();
+          selectedDateKey = dateKeyFromDate(t);
+          viewYear = t.getFullYear();
+          viewMonth = t.getMonth();
+          render();
+        });
+
+        clearCompletedBtn.addEventListener("click", clearCompleted);
+
+        render();
+      })();
+    </script>
+
+    <script>
+      // PWA: service worker registration (works on http(s), not file://)
+      (async () => {
+        if (!("serviceWorker" in navigator)) return;
+        try {
+          await navigator.serviceWorker.register("./sw.js");
+        } catch {
+          // ignore (e.g. opened via file:// or blocked)
+        }
+      })();
+    </script>
+  </body>
+</html>
+
