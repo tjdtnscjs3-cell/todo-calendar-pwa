@@ -512,8 +512,7 @@
             btn.type = "button";
             btn.dataset.date = key;
             btn.className =
-              "h-10 rounded-2xl border border-white/10 bg-white/5 text-sm tabular-nums text-white/85 transition hover:bg-white/10 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-indigo-400/30";
-            btn.textContent = String(day);
+              "relative h-12 rounded-2xl border border-white/10 bg-white/5 px-1 py-1 text-sm tabular-nums text-white/85 transition hover:bg-white/10 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-indigo-400/30";
 
             const isSelected = key === selectedDateKey;
             const isToday = key === todayKey;
@@ -522,6 +521,25 @@
             const isWeekend = dow === 0 || dow === 6;
             const holidayName = getHolidayName(key);
             const isHoliday = Boolean(holidayName);
+
+            // button content: day number + holiday label (if any)
+            const dayWrap = document.createElement("div");
+            dayWrap.className = "flex h-full w-full flex-col items-center justify-center leading-none";
+
+            const dayNum = document.createElement("div");
+            dayNum.className = "text-sm font-semibold tabular-nums";
+            dayNum.textContent = String(day);
+            dayWrap.appendChild(dayNum);
+
+            if (isHoliday) {
+              const label = document.createElement("div");
+              // keep it compact so it doesn't clutter small screens
+              label.className = "mt-1 max-w-full truncate text-[10px] font-medium text-rose-200/95";
+              label.textContent = holidayName;
+              dayWrap.appendChild(label);
+            }
+
+            btn.appendChild(dayWrap);
 
             if (hasTodos) {
               btn.classList.add("relative");
